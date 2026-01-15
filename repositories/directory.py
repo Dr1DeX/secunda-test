@@ -25,30 +25,29 @@ class DirectoryRepository:
             )
         )
 
-        async with self._session as session:
-            org = (await session.execute(stmt)).scalar_one_or_none()
+        org = (await self._session.execute(stmt)).scalar_one_or_none()
 
-            if not org:
-                return None
+        if not org:
+            return None
 
-            building = org.building
-            coords_stmt = select(
-                ST_Y(building.location).label("lat"),
-                ST_X(building.location).label("lon"),
-            ).where(Building.id == building.id)
-            coords = (await session.execute(coords_stmt)).mappings().first()
-            return dict(
-                id=org.id,
-                name=org.name,
-                phones=[p.phone for p in org.phones],
-                building=dict(
-                    id=building.id,
-                    address=building.address,
-                    lat=coords["lat"] if coords else None,
-                    lon=coords["lon"] if coords else None,
-                ),
-                activities=[dict(id=a.id, name=a.name, path=str(a.path), level=None) for a in org.activities],
-            )
+        building = org.building
+        coords_stmt = select(
+            ST_Y(building.location).label("lat"),
+            ST_X(building.location).label("lon"),
+        ).where(Building.id == building.id)
+        coords = (await self._session.execute(coords_stmt)).mappings().first()
+        return dict(
+            id=org.id,
+            name=org.name,
+            phones=[p.phone for p in org.phones],
+            building=dict(
+                id=building.id,
+                address=building.address,
+                lat=coords["lat"] if coords else None,
+                lon=coords["lon"] if coords else None,
+            ),
+            activities=[dict(id=a.id, name=a.name, path=str(a.path), level=None) for a in org.activities],
+        )
 
     async def get_list_buildings(
         self,
@@ -67,9 +66,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(items=list(rows))
 
     async def get_list_organizations_by_building(self, building_id: int, limit: int = 10, offset: int = 0):
         stmt = (
@@ -80,9 +78,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(items=list(rows))
 
     async def get_list_organizations_by_activity_exact(self, activity_id: int, limit: int = 10, offset: int = 0):
         stmt = (
@@ -94,36 +91,34 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(items=list(rows))
 
     async def get_organizations_by_activity_subtree(self, activity_id: int, limit: int = 10, offset: int = 0):
         root_stmt = select(Activity.path).where(Activity.id == activity_id)
 
-        async with self._session as session:
-            root_path = (await session.execute(root_stmt)).scalar_one_or_none()
+        root_path = (await self._session.execute(root_stmt)).scalar_one_or_none()
 
-            if not root_path:
-                return None
+        if not root_path:
+            return None
 
-            stmt = (
-                select(Organization.id, Organization.name)
-                .join(Organization.activities)
-                .where(text("activity.path <@ :root_path"))  # ltree operator: <@ (is descendant or equal)
-                .params(root_path=str(root_path))
-                .distinct()
-                .order_by(Organization.id)
-                .limit(limit)
-                .offset(offset)
-            )
+        stmt = (
+            select(Organization.id, Organization.name)
+            .join(Organization.activities)
+            .where(text("activity.path <@ :root_path"))  # ltree operator: <@ (is descendant or equal)
+            .params(root_path=str(root_path))
+            .distinct()
+            .order_by(Organization.id)
+            .limit(limit)
+            .offset(offset)
+        )
 
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(
-                activity_id=activity_id,
-                root_path=str(root_path),
-                items=list(rows),
-            )
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(
+            activity_id=activity_id,
+            root_path=str(root_path),
+            items=list(rows),
+        )
 
     async def get_organizations_by_name(self, name: str, limit: int = 10, offset: int = 0):
         stmt = (
@@ -134,9 +129,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(items=list(rows))
 
     async def get_organizations_in_radius(
         self,
@@ -164,13 +158,12 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(
-                center=dict(lat=lat, lon=lon),
-                radius_m=radius_m,
-                items=list(rows),
-            )
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(
+            center=dict(lat=lat, lon=lon),
+            radius_m=radius_m,
+            items=list(rows),
+        )
 
     async def get_organizations_in_bbox(
         self,
@@ -198,25 +191,21 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(
-                bbox=dict(
-                    min_lat=min_lat,
-                    min_lon=min_lon,
-                    max_lat=max_lat,
-                    max_lon=max_lon,
-                ),
-                items=list(rows),
-            )
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(
+            bbox=dict(
+                min_lat=min_lat,
+                min_lon=min_lon,
+                max_lat=max_lat,
+                max_lon=max_lon,
+            ),
+            items=list(rows),
+        )
 
     async def get_list_activities(self):
         stmt = select(Activity.id, Activity.name, Activity.path, Activity.parent_id).order_by(Activity.id)
 
-        async with self._session as session:
-            rows = (await session.execute(stmt)).mappings().all()
-            return dict(
-                items=list(
-                    dict(id=r["id"], name=r["name"], path=str(r["path"]), parent_id=r["parent_id"]) for r in rows
-                ),
-            )
+        rows = (await self._session.execute(stmt)).mappings().all()
+        return dict(
+            items=list(dict(id=r["id"], name=r["name"], path=str(r["path"]), parent_id=r["parent_id"]) for r in rows),
+        )
