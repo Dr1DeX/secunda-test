@@ -19,6 +19,8 @@ class Config(BaseSettings):
 
     APP_UNIQUE_ID: str = str(uuid4().hex[:10])
 
+    BEARER_TOKEN_FOR_API: str = "token"  # CHANGEME
+
     # # LOGGING
     DEBUG: bool = True
 
