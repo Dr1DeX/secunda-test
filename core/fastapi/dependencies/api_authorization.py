@@ -20,4 +20,4 @@ class BearerAuthentication(HTTPBearer):
         bearer_data = await super().__call__(request)
         if bearer_data.credentials != config.BEARER_TOKEN_FOR_API:
             raise HTTPException(status_code=403, detail="Invalid token for API.")
-        return
+        return None

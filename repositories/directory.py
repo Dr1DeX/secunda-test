@@ -32,8 +32,8 @@ class DirectoryRepository:
 
         building = org.building
         coords_stmt = select(
-            ST_Y(building.location).label("lat"),
-            ST_X(building.location).label("lon"),
+            ST_Y(text("building.location::geometry")).label("lat"),
+            ST_X(text("building.location::geometry")).label("lon"),
         ).where(Building.id == building.id)
         coords = (await self._session.execute(coords_stmt)).mappings().first()
         return dict(
@@ -58,16 +58,16 @@ class DirectoryRepository:
             select(
                 Building.id,
                 Building.address,
-                ST_Y(Building.location).label("lat"),
-                ST_X(Building.location).label("lon"),
+                ST_Y(text("building.location::geometry")).label("lat"),
+                ST_X(text("building.location::geometry")).label("lon"),
             )
             .order_by(Building.id)
             .limit(limit)
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_list_organizations_by_building(self, building_id: int, limit: int = 10, offset: int = 0):
         stmt = (
@@ -78,8 +78,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_list_organizations_by_activity_exact(self, activity_id: int, limit: int = 10, offset: int = 0):
         stmt = (
@@ -91,8 +91,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_organizations_by_activity_subtree(self, activity_id: int, limit: int = 10, offset: int = 0):
         root_stmt = select(Activity.path).where(Activity.id == activity_id)
@@ -113,12 +113,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(
-            activity_id=activity_id,
-            root_path=str(root_path),
-            items=list(rows),
-        )
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_organizations_by_name(self, name: str, limit: int = 10, offset: int = 0):
         stmt = (
@@ -129,8 +125,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(items=list(rows))
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_organizations_in_radius(
         self,
@@ -158,12 +154,8 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(
-            center=dict(lat=lat, lon=lon),
-            radius_m=radius_m,
-            items=list(rows),
-        )
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_organizations_in_bbox(
         self,
@@ -191,21 +183,11 @@ class DirectoryRepository:
             .offset(offset)
         )
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(
-            bbox=dict(
-                min_lat=min_lat,
-                min_lon=min_lon,
-                max_lat=max_lat,
-                max_lon=max_lon,
-            ),
-            items=list(rows),
-        )
+        rows = (await self._session.execute(stmt)).all()
+        return rows
 
     async def get_list_activities(self):
         stmt = select(Activity.id, Activity.name, Activity.path, Activity.parent_id).order_by(Activity.id)
 
-        rows = (await self._session.execute(stmt)).mappings().all()
-        return dict(
-            items=list(dict(id=r["id"], name=r["name"], path=str(r["path"]), parent_id=r["parent_id"]) for r in rows),
-        )
+        rows = (await self._session.execute(stmt)).all()
+        return rows

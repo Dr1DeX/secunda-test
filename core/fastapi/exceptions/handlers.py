@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.responses import ORJSONResponse
 
 from api.base.v1.response import BaseResponseModel
@@ -17,4 +17,12 @@ async def service_api_exception_handler(request: Request, exc: ServiceAPIExcepti
     return ORJSONResponse(
         content=body.model_dump(),
         status_code=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@app.exception_handler(HTTPException)
+async def exception_403_handler(request: Request, exc: HTTPException):
+    return ORJSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content=exc.detail,
     )

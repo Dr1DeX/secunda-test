@@ -1,18 +1,20 @@
 from pydantic import BaseModel
 
+from api.base.v1.response import BaseResponseModel
 
-class BuildingResponse(BaseModel):
-    id: int
-    address: str
+
+class BuildingResponseSchema(BaseModel):
+    id: int | None = None
+    address: str | None = None
     lat: float | None = None
     lon: float | None = None
 
 
-class BuildingListResponse(BaseModel):
-    items: list[BuildingResponse]
+class BuildingListResponse(BaseResponseModel):
+    result: list[BuildingResponseSchema]
 
 
-class OrganizationShortResponse(BaseModel):
+class OrganizationShortResponseSchema(BaseModel):
     id: int
     name: str
 
@@ -21,26 +23,30 @@ class OrganizationPhoneResponse(BaseModel):
     phone: str
 
 
-class OrganizationActivityResponse(BaseModel):
+class OrganizationActivityResponseSchema(BaseModel):
     id: int
     name: str
     path: str
     level: int | None = None
 
 
-class OrganizationDetailResponse(BaseModel):
+class OrganizationDetailResponseSchema(BaseModel):
     id: int
     name: str
     phones: list[str]
-    building: BuildingResponse
-    activities: list[OrganizationActivityResponse]
+    building: BuildingResponseSchema
+    activities: list[OrganizationActivityResponseSchema]
 
 
-class OrganizationListResponse(BaseModel):
-    items: list[OrganizationShortResponse]
+class OrganizationDetailResponse(BaseResponseModel):
+    result: OrganizationDetailResponseSchema
 
 
-class OrganizationInRadiusResponse(BaseModel):
+class OrganizationListResponse(BaseResponseModel):
+    result: list[OrganizationShortResponseSchema]
+
+
+class OrganizationInRadiusResponseSchema(BaseModel):
     id: int
     name: str
     building_id: int
@@ -48,30 +54,31 @@ class OrganizationInRadiusResponse(BaseModel):
     distance_m: float
 
 
-class OrganizationInRadiusListResponse(BaseModel):
-    center: dict
-    radius_m: float
-    items: list[OrganizationInRadiusResponse]
+class OrganizationInRadiusListResponse(BaseResponseModel):
+    result: list[OrganizationInRadiusResponseSchema]
 
 
-class OrganizationInBboxListResponse(BaseModel):
-    bbox: dict
-    items: list[OrganizationShortResponse]
+class OrganizationInBboxListResponse(BaseResponseModel):
+    result: list[OrganizationShortResponseSchema]
 
 
-# Activity schemas
-class ActivityResponse(BaseModel):
+class ActivityResponse(
+    BaseModel,
+):
     id: int
     name: str
     path: str
     parent_id: int | None = None
 
 
-class ActivityListResponse(BaseModel):
-    items: list[ActivityResponse]
+class ActivityListResponse(BaseResponseModel):
+    result: list[ActivityResponse]
 
 
-class OrganizationByActivitySubtreeResponse(BaseModel):
+class OrganizationByActivitySubtreeResponseSchema(OrganizationShortResponseSchema):
     activity_id: int
     root_path: str
-    items: list[OrganizationShortResponse]
+
+
+class OrganizationByActivitySubtreeResponse(BaseResponseModel):
+    result: list[OrganizationShortResponseSchema]

@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 
 from api.public.v1.response import (
-    OrganizationDetailResponse,
-    BuildingListResponse,
-    OrganizationListResponse,
-    OrganizationByActivitySubtreeResponse,
-    OrganizationInRadiusListResponse,
-    OrganizationInBboxListResponse,
-    ActivityListResponse,
+    OrganizationDetailResponseSchema,
+    BuildingResponseSchema,
+    OrganizationShortResponseSchema,
+    OrganizationInRadiusResponseSchema,
+    ActivityResponse,
 )
 from core.exceptions.service import ServiceAPIResponseStatus, ServiceAPIException
 from core.exceptions.service.enum import ServiceAPIResponseMessage
@@ -29,21 +27,23 @@ class DirectoryService:
                 message=ServiceAPIResponseMessage.NOT_FOUND_DATA,
                 extra_data={"organization_id": organization_id},
             )
-        return OrganizationDetailResponse(**result)
+        return OrganizationDetailResponseSchema(**result)
 
-    async def get_list_buildings(self, limit: int = 10, offset: int = 0) -> BuildingListResponse:
+    async def get_list_buildings(self, limit: int = 10, offset: int = 0) -> list[BuildingResponseSchema]:
         """
         Получить список зданий
         """
         result = await self._directory_repository.get_list_buildings(limit=limit, offset=offset)
-        return BuildingListResponse(**result)
+        result_schema = [BuildingResponseSchema(id=r.id, address=r.address, lat=r.lat, lon=r.lon) for r in result]
+
+        return result_schema
 
     async def get_list_organizations_by_building(
         self,
         building_id: int,
         limit: int = 10,
         offset: int = 0,
-    ) -> OrganizationListResponse:
+    ) -> list[OrganizationShortResponseSchema]:
         """
         Получить список организаций по зданию
         """
@@ -52,14 +52,20 @@ class DirectoryService:
             limit=limit,
             offset=offset,
         )
-        return OrganizationListResponse(**result)
+        return [
+            OrganizationShortResponseSchema(
+                id=r.id,
+                name=r.name,
+            )
+            for r in result
+        ]
 
     async def get_list_organizations_by_activity_exact(
         self,
         activity_id: int,
         limit: int = 10,
         offset: int = 0,
-    ) -> OrganizationListResponse:
+    ) -> list[OrganizationShortResponseSchema]:
         """
         Получить список организаций по точному совпадению деятельности
         """
@@ -68,14 +74,20 @@ class DirectoryService:
             limit=limit,
             offset=offset,
         )
-        return OrganizationListResponse(**result)
+        return [
+            OrganizationShortResponseSchema(
+                id=r.id,
+                name=r.name,
+            )
+            for r in result
+        ]
 
     async def get_organizations_by_activity_subtree(
         self,
         activity_id: int,
         limit: int = 10,
         offset: int = 0,
-    ) -> OrganizationByActivitySubtreeResponse:
+    ) -> list[OrganizationShortResponseSchema]:
         """
         Получить список организаций по поддереву деятельности
         """
@@ -90,14 +102,26 @@ class DirectoryService:
                 message=ServiceAPIResponseMessage.NOT_FOUND_DATA,
                 extra_data={"activity_id": activity_id},
             )
-        return OrganizationByActivitySubtreeResponse(**result)
 
-    async def get_organizations_by_name(self, name: str, limit: int = 10, offset: int = 0) -> OrganizationListResponse:
+        return [OrganizationShortResponseSchema(id=r.id, name=r.name) for r in result]
+
+    async def get_organizations_by_name(
+        self,
+        name: str,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> list[OrganizationShortResponseSchema]:
         """
         Получить список организаций по имени
         """
         result = await self._directory_repository.get_organizations_by_name(name=name, limit=limit, offset=offset)
-        return OrganizationListResponse(**result)
+        return [
+            OrganizationShortResponseSchema(
+                id=r.id,
+                name=r.name,
+            )
+            for r in result
+        ]
 
     async def get_organizations_in_radius(
         self,
@@ -106,7 +130,7 @@ class DirectoryService:
         radius_m: float,
         limit: int = 10,
         offset: int = 0,
-    ) -> OrganizationInRadiusListResponse:
+    ) -> list[OrganizationInRadiusResponseSchema]:
         """
         Получить список организаций в радиусе
         """
@@ -117,7 +141,16 @@ class DirectoryService:
             limit=limit,
             offset=offset,
         )
-        return OrganizationInRadiusListResponse(**result)
+        return [
+            OrganizationInRadiusResponseSchema(
+                id=r.id,
+                name=r.name,
+                building_id=r.building_id,
+                address=r.address,
+                distance_m=r.distance_m,
+            )
+            for r in result
+        ]
 
     async def get_organizations_in_bbox(
         self,
@@ -127,7 +160,7 @@ class DirectoryService:
         max_lon: float,
         limit: int = 10,
         offset: int = 0,
-    ) -> OrganizationInBboxListResponse:
+    ) -> list[OrganizationShortResponseSchema]:
         """
         Получить список организаций в прямоугольной области
         """
@@ -139,11 +172,25 @@ class DirectoryService:
             limit=limit,
             offset=offset,
         )
-        return OrganizationInBboxListResponse(**result)
+        return [
+            OrganizationShortResponseSchema(
+                id=r.id,
+                name=r.name,
+            )
+            for r in result
+        ]
 
-    async def get_list_activities(self) -> ActivityListResponse:
+    async def get_list_activities(self) -> list[ActivityResponse]:
         """
         Получить список деятельности
         """
         result = await self._directory_repository.get_list_activities()
-        return ActivityListResponse(**result)
+        return [
+            ActivityResponse(
+                id=r.id,
+                name=r.name,
+                path=str(r.path),
+                parent_id=r.parent_id,
+            )
+            for r in result
+        ]
