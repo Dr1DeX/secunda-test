@@ -1,0 +1,66 @@
+version: '3'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: .docker/dev/api/Dockerfile
+    container_name: api
+    env_file:
+      - .env.example
+    working_dir: /app
+    ports:
+      - "8889:8889"
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - intro-net
+
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - intro-net
+
+  nginx:
+    container_name: nginx
+    build:
+      context: .docker/dev/nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - intro-net
+
+  redis:
+    container_name: redis
+    image: redis
+    ports:
+      - '6390:6379'
+    command: >
+      --requirepass redis12345
+    networks:
+      - intro-net
+    
+
+volumes:
+  redis_data: {}
+
+networks:
+  intro-net:
+    driver: bridge
