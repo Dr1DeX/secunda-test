@@ -5,7 +5,7 @@ import redis.asyncio as aioredis
 
 @dataclass
 class CacheRepository:
-    redis: aioredis.Redis
+    _redis: aioredis.Redis
 
     async def ping(self):
-        await self.redis.ping()
+        await self._redis.ping()
