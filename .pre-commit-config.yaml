@@ -20,7 +20,7 @@ repos:
         args: [--py36-plus]
 
 
--   repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-    -   id: isort
+#-   repo: https://github.com/pycqa/isort
+#    rev: 5.13.2
+#    hooks:
+#    -   id: isort
