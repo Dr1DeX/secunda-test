@@ -29,7 +29,7 @@ def service_response_decorator(status_response: int = 200):
                     status=err.status,
                 )
                 return ORJSONResponse(
-                    content=response_body.dict(),
+                    content=response_body.model_dump(),
                     status_code=err.status,
                 )
 
